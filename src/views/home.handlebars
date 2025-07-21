@@ -1,10 +1,38 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Home</title>
-</head>
-<body>
-  <h1>¡funciona!</h1>
-  <p>🎉</p>
-</body>
-</html>
+<h1>Bienvenido</h1>
+
+<div>
+  <button onclick="showLogin()">Iniciar Sesión</button>
+  <button onclick="showRegister()">Registrarse</button>
+</div>
+
+<h2 id="form-title">Iniciar Sesión</h2>
+
+
+<form id="login-form" method="POST" action="/api/sessions/login">
+  <input type="email" name="email" placeholder="Correo" required>
+  <input type="password" name="password" placeholder="Contraseña" required>
+  <button type="submit">Entrar</button>
+</form>
+
+
+<form id="register-form" method="POST" action="/api/sessions/register" style="display:none">
+  <input type="text" name="first_name" placeholder="Nombre" required>
+  <input type="text" name="last_name" placeholder="Apellido" required>
+  <input type="email" name="email" placeholder="Correo" required>
+  <input type="password" name="password" placeholder="Contraseña" required>
+  <button type="submit">Crear cuenta</button>
+</form>
+
+<script>
+  function showLogin() {
+    document.getElementById("login-form").style.display = "block";
+    document.getElementById("register-form").style.display = "none";
+    document.getElementById("form-title").textContent = "Iniciar Sesión";
+  }
+
+  function showRegister() {
+    document.getElementById("login-form").style.display = "none";
+    document.getElementById("register-form").style.display = "block";
+    document.getElementById("form-title").textContent = "Registrarse";
+  }
+</script>

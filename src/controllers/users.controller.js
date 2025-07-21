@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 export const registerUser = async (req, res) => {
-  const { first_name, last_name, email, age, password } = req.body;
+  const { first_name, last_name, email, password, age } = req.body;
 
   try {
     const exists = await UserModel.findOne({ email });
@@ -16,11 +16,9 @@ export const registerUser = async (req, res) => {
       first_name,
       last_name,
       email,
-      age,
       password: hashedPassword,
+      age
     });
-
-    console.log('Usuario creado:', newUser);
 
     res.status(201).json({
       message: 'Usuario creado exitosamente',
@@ -29,7 +27,7 @@ export const registerUser = async (req, res) => {
         last_name: newUser.last_name,
         email: newUser.email,
         age: newUser.age,
-        role: newUser.role, 
+        role: newUser.role
       }
     });
   } catch (err) {
@@ -53,17 +51,39 @@ export const loginUser = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: user._id, role: user.role }, 
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' } 
+      { expiresIn: '1h' }
     );
+    
     res.status(200).json({
       message: 'Login exitoso',
       token,
     });
 
   } catch (error) {
-    console.error(' Error en login:', error);
+    console.error('Error en login:', error);
     res.status(500).json({ message: 'Error en el servidor' });
+  }
+};
+
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await UserModel.findById(req.user.id); 
+    if (!user) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+    res.status(200).json({
+      user: {
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        age: user.age,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener el usuario:', error);
+    res.status(500).json({ message: 'Error al obtener la información del usuario' });
   }
 };
