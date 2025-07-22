@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { create } from 'express-handlebars';
 import sessionsRouter from './routes/sessions.router.js';
+import cartRouter from './routes/cart.router.js';
+
 
 dotenv.config();
 
@@ -18,8 +20,9 @@ const app = express();
 app.use(cors({
   origin: 'http://localhost:3000', 
   credentials: true
-}));
+})); 
 
+app.use('/api/cart', cartRouter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(passport.initialize());
