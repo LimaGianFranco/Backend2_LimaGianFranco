@@ -6,7 +6,7 @@ export const addToCart = async (req, res) => {
   const userId = req.user._id;
 
   try {
-    const product = await ProductModel.findById(productId); 
+    const product = await ProductModel.findById(productId);
     if (!product || product.stock < quantity) {
       return res.status(400).json({ error: 'Producto fuera de stock o cantidad no disponible' });
     }
@@ -15,7 +15,7 @@ export const addToCart = async (req, res) => {
     if (!cart) {
       cart = new Cart({ userId, products: [] });
     }
-    
+
     const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
     if (productIndex === -1) {
       cart.products.push({ productId, quantity });

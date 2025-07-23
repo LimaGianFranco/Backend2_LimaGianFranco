@@ -25,7 +25,7 @@ router.get('/current', authToken, (req, res) => {
 });
 
 router.get('/admin-dashboard', authToken, authorizeRoles('admin'), (req, res) => {
-  res.send('Dashboard de administrador');
+  res.send(`Bienvenido al panel de administrador, ${req.user.first_name}`);
 });
 
 export default router;

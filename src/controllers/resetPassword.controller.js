@@ -1,7 +1,8 @@
-import { ResetPasswordToken } from '../models/resetPasswordToken.model.js';
-import { UserModel } from '../models/user.model.js';
-import bcrypt from 'bcryptjs';
-
+import { UserModel } from '../dao/models/user.model.js';
+import { sendRecoveryMail } from '../services/emailService.js';
+import { createHash } from '../utils/hash.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 export const sendResetPasswordEmail = async (req, res) => {
   const { email } = req.body;
 
@@ -11,60 +12,39 @@ export const sendResetPasswordEmail = async (req, res) => {
       return res.status(404).json({ error: 'Usuario no encontrado' });
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
-    const resetPasswordToken = new ResetPasswordToken({
-      userId: user._id,
-      token,
-    });
-    await resetPasswordToken.save();
-
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    const resetLink = `http://localhost:8080/reset-password/${token}`;
-    
-    await transporter.sendMail({
-      from: 'no-reply@ecommerce.com',
-      to: email,
-      subject: 'Restablecer contraseña',
-      text: `Haz clic en el siguiente enlace para restablecer tu contraseña: ${resetLink}`,
-    });
-
+    await sendRecoveryMail(user.email, user._id);
     res.status(200).json({ message: 'Correo de recuperación enviado' });
   } catch (error) {
-    res.status(500).json({ error: 'Error al enviar correo' });
+    res.status(500).json({ error: 'Error al enviar correo de recuperación' });
   }
 };
-
 export const resetPassword = async (req, res) => {
   const { token } = req.params;
   const { password } = req.body;
 
   try {
-    const resetToken = await ResetPasswordToken.findOne({ token });
-    if (!resetToken) {
-      return res.status(400).json({ error: 'Token de recuperación no válido o expirado' });
-    }
-
-    const user = await UserModel.findById(resetToken.userId);
+    const decoded = jwt.verify(token, process.env.SECRET_JWT);
+    const user = await UserModel.findById(decoded.id);
     if (!user) {
-      return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    if (bcrypt.compareSync(password, user.password)) {
-      return res.status(400).json({ error: 'No puedes restablecer la contraseña a la misma que tenías' });
+      return res.status(400).json({ error: 'Usuario no encontrado' });
     }
 
-    const hashedPassword = bcrypt.hashSync(password, 10);
+    if (user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({ error: 'Token expirado' });
+    }
+
+    const isSamePassword = bcrypt.compareSync(password, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede ser la misma que la anterior' });
+    }
+
+    const hashedPassword = createHash(password);
     user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
     await user.save();
-    await resetToken.delete(); 
 
-    res.status(200).json({ message: 'Contraseña restablecida exitosamente' });
+    res.status(200).json({ message: 'Contraseña restablecida con éxito' });
   } catch (error) {
     res.status(500).json({ error: 'Error al restablecer la contraseña' });
   }
