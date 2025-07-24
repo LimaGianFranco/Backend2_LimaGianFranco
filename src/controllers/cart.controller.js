@@ -29,3 +29,14 @@ export const addToCart = async (req, res) => {
     res.status(500).json({ error: 'Error al agregar al carrito' });
   }
 };
+
+export const getCart = async (req, res) => {
+  try {
+    const cart = await Cart.findOne({ userId: req.user._id }).populate('products.productId');
+    if (!cart) return res.status(404).json({ error: 'Carrito no encontrado' });
+
+    res.status(200).json(cart);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener el carrito' });
+  }
+};

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login y Registro</title>
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .form-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      margin-top: 20px;
+    }
+
+    .form-container form {
+      margin-bottom: 20px;
+    }
+
+    .form-container button {
+      margin-top: 10px;
+    }
+
+    #register-form {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div id="login-form">
+      <h2>Iniciar sesión</h2>
+      <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
+        <button type="submit">Iniciar sesión</button>
+      </form>
+      <button id="show-register">¿No tienes cuenta? Regístrate</button>
+    </div>
+
+    <div id="register-form">
+      <h2>Crear cuenta</h2>
+      <form id="registerForm" onsubmit="event.preventDefault(); register();">
+        <input type="text" id="first_name" placeholder="Nombre" required />
+        <input type="text" id="last_name" placeholder="Apellido" required />
+        <input type="email" id="register-email" placeholder="Email" required />
+        <input type="password" id="register-password" placeholder="Contraseña" required />
+        <button type="submit">Registrar</button>
+      </form>
+      <button id="show-login">¿Ya tienes cuenta? Inicia sesión</button>
+    </div>
+  </div>
+
+  <script>
+    const showRegisterButton = document.getElementById('show-register');
+    const showLoginButton = document.getElementById('show-login');
+    const loginForm = document.getElementById('login-form');
+    const registerForm = document.getElementById('register-form');
+
+    showRegisterButton.addEventListener('click', () => {
+      loginForm.style.display = 'none';
+      registerForm.style.display = 'block';
+    });
+
+    showLoginButton.addEventListener('click', () => {
+      registerForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const response = await fetch('/api/sessions/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Login exitoso:', data);
+        localStorage.setItem('token', data.token);
+        location.href = '/products.html'; 
+      } else {
+        console.error('Error en el login:', data);
+        alert(data.message || 'Error en el login');
+      }
+    });
+
+    async function register() {
+      const firstName = document.getElementById('first_name').value;
+      const lastName = document.getElementById('last_name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+
+      const response = await fetch('/api/sessions/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ first_name: firstName, last_name: lastName, email, password })
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        console.log('Registro exitoso:', data);
+        alert('Usuario registrado');
+        location.href = '/products.html';  
+      } else {
+        console.error('Error en el registro:', data);
+        alert(data.message || 'Error al registrar');
+      }
+    }
+  </script>
+</body>
+</html>

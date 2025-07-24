@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Carrito de compras</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <h2>Tu Carrito</h2>
+  <div id="cart-items"></div>
+  <button id="checkout">Generar Ticket</button>
+  <script>
+    async function getCart() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Debes iniciar sesión');
+        location.href = '/login.html';
+        return;
+      }
+
+      const response = await fetch('/api/cart', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const cart = await response.json();
+      let cartHTML = '';
+      if (cart.products && cart.products.length > 0) {
+        cart.products.forEach(product => {
+          cartHTML += `
+            <div>
+              <h3>${product.productId.name}</h3>
+              <p>Precio: $${product.productId.price}</p>
+              <p>Cantidad: ${product.quantity}</p>
+            </div>
+          `;
+        });
+      } else {
+        cartHTML = '<p>No hay productos en el carrito.</p>';
+      }
+      document.getElementById('cart-items').innerHTML = cartHTML;
+    }
+    getCart();
+  </script>
+</body>
+</html>

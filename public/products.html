@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Productos</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <h2>Productos</h2>
+  <div id="product-list"></div>
+  <button onclick="location.href='/cart.html'">Ver Carrito</button>
+
+  <script>
+    async function getProducts() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Debes iniciar sesión');
+        location.href = '/login.html'; 
+        return;
+      }
+
+      const response = await fetch('/api/products', {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const products = await response.json();
+      let productHTML = '';
+      products.forEach(product => {
+        productHTML += `
+          <div>
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <p>Precio: $${product.price}</p>
+            <button onclick="addToCart('${product._id}')">Agregar al carrito</button>
+          </div>
+        `;
+      });
+      document.getElementById('product-list').innerHTML = productHTML;
+    }
+    async function addToCart(productId) {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Debes iniciar sesión');
+        location.href = '/login.html'; 
+        return;
+      }
+
+      const response = await fetch('/api/cart/add-to-cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ productId, quantity: 1 })
+      });
+
+      const data = await response.json();
+      alert(data.message || data.error);
+    }
+    getProducts();
+  </script>
+</body>
+</html>
